@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>ファミコン風サッカーゲーム</title>
+    <style>
+        body { background: black; color: white; text-align: center; font-family: "Press Start 2P", monospace; }
+        canvas { display: none; margin: auto; image-rendering: pixelated; }
+        #loading { font-size: 24px; margin-top: 50px; }
+        #loading-bar { width: 200px; height: 20px; background: gray; margin: auto; position: relative; }
+        #progress { width: 0%; height: 100%; background: lime; position: absolute; transition: width 2s linear; }
+        #score { font-size: 24; margin: 10px; display: none; }
+        .controls-wrapper { display: flex; justify-content: space-between; padding: 20px; }
+        .controls { display: flex; flex-direction: column; gap: 10px; }
+        .button { padding: 10px; font-size: 18px; background: gray; border: none; color: white; }
+    </style>
+</head>
+<body>
+    <h1>ファミコン風サッカー ⚽🏆</h1>
+    <p id="loading">Now Loading...</p>
+    <div id="loading-bar"><div id="progress"></div></div>
+    
+    <p id="score">プレイヤー1: 0 | プレイヤー2: 0</p>
+    <canvas id="gameCanvas" width="256" height="240"></canvas>
+
+    <div class="controls-wrapper">
+        <div class="controls">
+            <button class="button" onclick="movePlayer1(0, -12)">⬆</button>
+            <button class="button" onclick="movePlayer1(-12, 0)">⬅</button>
+            <button class="button" onclick="movePlayer1(12, 0)">➡</button>
+            <button class="button" onclick="movePlayer1(0, 12)">⬇</button>
+        </div>
+
+        <div class="controls">
+            <button class="button" onclick="movePlayer2(0, -8)">⬆</button>
+            <button class="button" onclick="movePlayer2(-8, 0)">⬅</button>
+            <button class="button" onclick="movePlayer2(8, 0)">➡</button>
+            <button class="button" onclick="movePlayer2(0, 8)">⬇</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        let score1 = 0, score2 = 0;
+        let ball = { x: 128, y: 120, radius: 5, dx: 2, dy: 2 };
+        let player1 = { x: 30, y: 120, width: 10, height: 20 };
+        let player2 = { x: 220, y: 120, width: 10, height: 20 };
+
+        function movePlayer1(dx, dy) {
+            let newX = player1.x + dx;
+            let newY = player1.y + dy;
+
+            if (newX >= 0 && newX + player1.width <= canvas.width) player1.x = newX;
+            if (newY >= 0 && newY + player1.height <= canvas.height) player1.y = newY;
+        }
+
+        function movePlayer2(dx, dy) {
+            let newX = player2.x + dx;
+            let newY = player2.y + dy;
+
+            if (newX >= 0 && newX + player2.width <= canvas.width) player2.x = newX;
+            if (newY >= 0 && newY + player2.height <= canvas.height) player2.y = newY;
+        }
+
+        function movePlayer1(dx, dy) {
+    let newX = player1.x + dx * 2;  // プレイヤー1の速度を 4 に
+    let newY = player1.y + dy * 2;
+
+    if (newX >= 0 && newX + player1.width <= canvas.width) player1.x = newX;
+    if (newY >= 0 && newY + player1.height <= canvas.height) player1.y = newY;
+}
+
+function movePlayer2(dx, dy) {
+    let newX = player2.x + dx * 2;  // プレイヤー2の速度を 4 に
+    let newY = player2.y + dy * 2;
+
+    if (newX >= 0 && newX + player2.width <= canvas.width) player2.x = newX;
+    if (newY >= 0 && newY + player2.height <= canvas.height) player2.y = newY;
+}
+
+        function checkCollision(player) {
+            if (
+                ball.x + ball.radius > player.x &&
+                ball.x - ball.radius < player.x + player.width &&
+                ball.y + ball.radius > player.y &&
+                ball.y - ball.radius < player.y + player.height
+            ) {
+                ball.dx *= -1;
+            }
+        }
+
+        function update() {
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            if (ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) ball.dx *= -1;
+            if (ball.y + ball.radius > canvas.height || ball.y - ball.radius < 0) ball.dy *= -1;
+
+            checkCollision(player1);
+            checkCollision(player2);
+
+            if (Math.random() < 0.03) {  
+                ball.dx = (Math.random() < 0.5 ? -1 : 1) * 2;
+                ball.dy = (Math.random() < 0.5 ? -1 : 1) * 2;
+            }
+
+            if (ball.x > 240) { score1++; resetBall(); }
+            if (ball.x < 10) { score2++; resetBall(); }
+
+            document.getElementById("score").innerText = `プレイヤー1: ${score1} | プレイヤー2: ${score2}`;
+        }
+
+        function resetBall() {
+            ball.x = 128;
+            ball.y = 120;
+            ball.dx = 2;
+            ball.dy = 2;
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "red"; ctx.fillRect(player1.x, player1.y, player1.width, player1.height);
+            ctx.fillStyle = "blue"; ctx.fillRect(player2.x, player2.y, player2.width, player2.height);
+            ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2); ctx.fill();
+        }
+
+        function startGame() {
+            document.getElementById("loading").style.display = "none";
+            document.getElementById("loading-bar").style.display = "none";
+            document.getElementById("score").style.display = "block";
+            document.querySelectorAll(".controls-wrapper").forEach(control => control.style.display = "flex");
+            canvas.style.display = "block";
+            gameLoop();
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function animateLoading() {
+            document.getElementById("progress").style.width = "100%";
+            setTimeout(startGame, 2000);
+        }
+
+        setTimeout(animateLoading, 500);
+    </script>
+</body>
+</html>
